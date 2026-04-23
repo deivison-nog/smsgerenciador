@@ -1,0 +1,4 @@
+| Nome            | E-mail                                        | Senha      | Tipo        |
+| --------------- | --------------------------------------------- | ---------- | ----------- |
+| Admin Principal | [admin@empresa.com](mailto:admin@empresa.com) | `admin123` | admin       |
+| João da Silva   | [joao@empresa.com](mailto:joao@empresa.com)   | `joao123`  | funcionario |
