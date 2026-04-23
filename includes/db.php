@@ -1,6 +1,6 @@
 <?php
 $host = 'localhost';
-$dbname = 'cronograma_empresa';
+$dbname = 'smsgerenciador';
 $user = 'root';
 $pass = '';
 

@@ -40,7 +40,7 @@ if ($isFuncionario) {
 <html lang="pt-br">
 <head>
   <meta charset="UTF-8">
-  <title>Cronograma</title>
+  <title>Smsgerenciador</title>
   <!-- Bootstrap CSS -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.9.0/fullcalendar.min.css" rel="stylesheet">
@@ -95,7 +95,7 @@ if ($isFuncionario) {
 <div id="cabecalho-calendario">
 <nav class="navbar navbar-expand-lg navbar-dark bg-primary rounded mb-4">
   <div class="container-fluid">
-    <span class="navbar-brand">Cronograma - <?= htmlspecialchars($_SESSION['usuario_nome']) ?></span>
+    <span class="navbar-brand">Smsgerenciador - <?= htmlspecialchars($_SESSION['usuario_nome']) ?></span>
     <div class="d-flex">
       <a class="btn btn-light btn-sm" href="../logout.php">Sair</a>
     </div>
@@ -372,7 +372,7 @@ $(document).ready(function () {
         format: [canvas.width, canvas.height]
       });
       pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
-      pdf.save("cronograma.pdf");
+      pdf.save("smsgerenciador.pdf");
       $('#pdf-button').show();
     });
   });

@@ -35,7 +35,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <html lang="pt-br">
 <head>
   <meta charset="UTF-8">
-  <title>Login - Cronograma</title>
+  <title>Login - Smsgerenciador</title>
   <style>
     body { font-family: Arial, sans-serif; background: #f4f4f4; }
     .login-container {
