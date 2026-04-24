@@ -40,10 +40,7 @@ if ($mes < 1)  { $mes = 12; $ano--; }
 if ($mes > 12) { $mes = 1;  $ano++; }
 
 $diasNoMes   = (int) (new DateTime("$ano-$mes-01"))->format('t');
-$nomeMes     = strftime('%B', mktime(0, 0, 0, $mes, 1, $ano));   // pt fallback below
-$nomesMeses  = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho',
-                'Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
-$nomeMes     = $nomesMeses[$mes - 1];
+$nomeMes    = $nomesMeses[$mes - 1];
 
 // URLs de navegação
 $prevMes = $mes - 1; $prevAno = $ano;

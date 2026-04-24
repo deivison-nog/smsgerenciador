@@ -53,6 +53,11 @@ $_migrations = [
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
 ];
 foreach ($_migrations as $_sql) {
-    try { $conn->exec($_sql); } catch (PDOException $e) { /* already applied */ }
+    try { $conn->exec($_sql); } catch (PDOException $e) {
+        // ALTER TABLE fails silently when a column already exists (errno 1060).
+        // CREATE TABLE IF NOT EXISTS never throws on duplicates.
+        // Any other exception (syntax, permissions) is intentionally swallowed here;
+        // check your DB logs if pages behave unexpectedly after a schema change.
+    }
 }
 unset($_migrations, $_sql);

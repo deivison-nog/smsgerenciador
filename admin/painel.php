@@ -42,9 +42,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['acao'] ?? '') === 'cadastr
     $regime             = $_POST['regime_contratacao']      ?? '';
     $sit                = 'ativo';
 
-    // Administrativo não pode criar admin; lotacao é a sua própria
-    if (!$isAdmin && $perfil_novo === 'admin') {
-        $erro = 'Sem permissão para criar usuários administradores.';
+    // Administrativo não pode criar admin nem outros administrativos; lotacao é a sua própria
+    if (!$isAdmin && in_array($perfil_novo, ['admin', 'administrativo'])) {
+        $erro = 'Sem permissão para criar usuários com este perfil.';
     } elseif ($nome === '' || $email === '' || $senha === '') {
         $erro = 'Preencha todos os campos obrigatórios (Nome, E-mail, Senha).';
     } else {
@@ -77,9 +77,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['acao'] ?? '') === 'cadastr
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['acao'] ?? '') === 'inativar') {
     $uid = (int) ($_POST['uid'] ?? 0);
     if ($uid > 0 && $uid !== (int) $_SESSION['usuario_id']) {
-        $conn->prepare("UPDATE usuarios SET situacao='inativo', inativado_em=NOW() WHERE id=?")
-             ->execute([$uid]);
-        $mensagem = 'Usuário inativado com sucesso.';
+        // administrativo só pode inativar usuários da própria lotação
+        $where = $isAdmin ? "id = ?" : "id = ? AND lotacao_id = ?";
+        $params = $isAdmin ? [$uid] : [$uid, $lotacaoId];
+        $stmt = $conn->prepare("UPDATE usuarios SET situacao='inativo', inativado_em=NOW() WHERE $where");
+        $stmt->execute($params);
+        $mensagem = $stmt->rowCount() ? 'Usuário inativado com sucesso.' : 'Usuário não encontrado na sua lotação.';
     } else {
         $erro = 'Não é possível inativar o próprio usuário.';
     }
@@ -89,9 +92,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['acao'] ?? '') === 'inativa
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['acao'] ?? '') === 'reativar') {
     $uid = (int) ($_POST['uid'] ?? 0);
     if ($uid > 0) {
-        $conn->prepare("UPDATE usuarios SET situacao='ativo', inativado_em=NULL WHERE id=?")
-             ->execute([$uid]);
-        $mensagem = 'Usuário reativado com sucesso.';
+        $where = $isAdmin ? "id = ?" : "id = ? AND lotacao_id = ?";
+        $params = $isAdmin ? [$uid] : [$uid, $lotacaoId];
+        $stmt = $conn->prepare("UPDATE usuarios SET situacao='ativo', inativado_em=NULL WHERE $where");
+        $stmt->execute($params);
+        $mensagem = $stmt->rowCount() ? 'Usuário reativado com sucesso.' : 'Usuário não encontrado na sua lotação.';
     }
 }
 
@@ -472,8 +477,8 @@ $chamados = $conn->query("
               <select name="perfil_novo" class="form-select" required>
                 <?php if ($isAdmin): ?>
                   <option value="admin">Administrador</option>
+                  <option value="administrativo">Administrativo</option>
                 <?php endif; ?>
-                <option value="administrativo">Administrativo</option>
                 <option value="coordenador">Coordenador</option>
                 <option value="profissional" selected>Profissional</option>
               </select>
