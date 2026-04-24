@@ -100,7 +100,66 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['acao'] ?? '') === 'reativa
     }
 }
 
-// ── POST: atualizar status de chamado ─────────────────────────────────────
+// ── POST: editar usuário ───────────────────────────────────────────────────
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['acao'] ?? '') === 'editar') {
+    $uid             = (int) ($_POST['uid']              ?? 0);
+    $nome            = trim($_POST['nome']               ?? '');
+    $cpf             = trim($_POST['cpf']                ?? '');
+    $data_nascimento = trim($_POST['data_nascimento']    ?? '') ?: null;
+    $email           = trim($_POST['email']              ?? '');
+    $senha           = trim($_POST['senha']              ?? '');
+    $perfil_edit     = $_POST['perfil_novo']             ?? 'profissional';
+    $ocupacao        = trim($_POST['ocupacao']           ?? '');
+    $registro_classe = trim($_POST['registro_classe']    ?? '');
+    $lotacao_edit    = (int) ($_POST['lotacao_id']       ?? 0) ?: null;
+    $carga_horaria   = trim($_POST['carga_horaria']      ?? '');
+    $regime          = $_POST['regime_contratacao']      ?? '';
+
+    if (!$isAdmin && in_array($perfil_edit, ['admin', 'administrativo'])) {
+        $erro = 'Sem permissão para definir este perfil.';
+    } elseif ($uid <= 0 || $nome === '' || $email === '') {
+        $erro = 'Preencha todos os campos obrigatórios (Nome, E-mail).';
+    } else {
+        if (!$isAdmin) { $lotacao_edit = $lotacaoId; }
+        $tipo_edit = ($perfil_edit === 'admin') ? 'admin' : 'funcionario';
+
+        if ($senha !== '') {
+            // atualizar com nova senha
+            $stmt = $conn->prepare("
+                UPDATE usuarios SET
+                    nome=?, cpf=?, data_nascimento=?, email=?, senha=?, tipo=?,
+                    perfil=?, ocupacao=?, registro_classe=?, lotacao_id=?,
+                    carga_horaria=?, regime_contratacao=?
+                WHERE id=?" . ($isAdmin ? '' : ' AND lotacao_id=?')
+            );
+            $params = [
+                $nome, $cpf ?: null, $data_nascimento, $email, md5($senha),
+                $tipo_edit, $perfil_edit, $ocupacao, $registro_classe ?: null,
+                $lotacao_edit, $carga_horaria ?: null, $regime ?: null, $uid,
+            ];
+            if (!$isAdmin) { $params[] = $lotacaoId; }
+        } else {
+            // manter senha existente
+            $stmt = $conn->prepare("
+                UPDATE usuarios SET
+                    nome=?, cpf=?, data_nascimento=?, email=?, tipo=?,
+                    perfil=?, ocupacao=?, registro_classe=?, lotacao_id=?,
+                    carga_horaria=?, regime_contratacao=?
+                WHERE id=?" . ($isAdmin ? '' : ' AND lotacao_id=?')
+            );
+            $params = [
+                $nome, $cpf ?: null, $data_nascimento, $email,
+                $tipo_edit, $perfil_edit, $ocupacao, $registro_classe ?: null,
+                $lotacao_edit, $carga_horaria ?: null, $regime ?: null, $uid,
+            ];
+            if (!$isAdmin) { $params[] = $lotacaoId; }
+        }
+        $stmt->execute($params);
+        $mensagem = $stmt->rowCount() ? 'Profissional atualizado com sucesso.' : 'Nenhuma alteração detectada.';
+    }
+}
+
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['acao'] ?? '') === 'status') {
     $cid    = (int) ($_POST['id']     ?? 0);
     $status = $_POST['status'] ?? '';
@@ -328,19 +387,35 @@ $chamados = $conn->query("
                     </td>
                     <td>
                       <?php if ((int)$u['id'] !== (int)$_SESSION['usuario_id']): ?>
-                        <?php if (!$inativo): ?>
-                          <form method="POST" onsubmit="return confirm('Inativar este profissional?')">
-                            <input type="hidden" name="acao" value="inativar">
-                            <input type="hidden" name="uid" value="<?= (int)$u['id'] ?>">
-                            <button type="submit" class="btn btn-sm btn-outline-warning py-0">Inativar</button>
-                          </form>
-                        <?php else: ?>
-                          <form method="POST">
-                            <input type="hidden" name="acao" value="reativar">
-                            <input type="hidden" name="uid" value="<?= (int)$u['id'] ?>">
-                            <button type="submit" class="btn btn-sm btn-outline-success py-0">Reativar</button>
-                          </form>
-                        <?php endif; ?>
+                        <div class="d-flex flex-column gap-1">
+                          <button type="button"
+                            class="btn btn-sm btn-outline-primary py-0 btn-editar-usuario"
+                            data-id="<?= (int)$u['id'] ?>"
+                            data-nome="<?= htmlspecialchars($u['nome'],           ENT_QUOTES) ?>"
+                            data-cpf="<?= htmlspecialchars($u['cpf']  ?? '',      ENT_QUOTES) ?>"
+                            data-nascimento="<?= htmlspecialchars($u['data_nascimento'] ?? '', ENT_QUOTES) ?>"
+                            data-email="<?= htmlspecialchars($u['email'],          ENT_QUOTES) ?>"
+                            data-perfil="<?= htmlspecialchars($u['perfil'] ?? 'profissional', ENT_QUOTES) ?>"
+                            data-ocupacao="<?= htmlspecialchars($u['ocupacao'] ?? '', ENT_QUOTES) ?>"
+                            data-registro="<?= htmlspecialchars($u['registro_classe'] ?? '', ENT_QUOTES) ?>"
+                            data-lotacao="<?= (int)($u['lotacao_id'] ?? 0) ?>"
+                            data-carga="<?= htmlspecialchars($u['carga_horaria'] ?? '', ENT_QUOTES) ?>"
+                            data-regime="<?= htmlspecialchars($u['regime_contratacao'] ?? '', ENT_QUOTES) ?>"
+                          >&#9998; Editar</button>
+                          <?php if (!$inativo): ?>
+                            <form method="POST" onsubmit="return confirm('Inativar este profissional?')">
+                              <input type="hidden" name="acao" value="inativar">
+                              <input type="hidden" name="uid" value="<?= (int)$u['id'] ?>">
+                              <button type="submit" class="btn btn-sm btn-outline-warning py-0 w-100">Inativar</button>
+                            </form>
+                          <?php else: ?>
+                            <form method="POST">
+                              <input type="hidden" name="acao" value="reativar">
+                              <input type="hidden" name="uid" value="<?= (int)$u['id'] ?>">
+                              <button type="submit" class="btn btn-sm btn-outline-success py-0 w-100">Reativar</button>
+                            </form>
+                          <?php endif; ?>
+                        </div>
                       <?php endif; ?>
                     </td>
                   </tr>
@@ -520,6 +595,148 @@ $chamados = $conn->query("
   </div>
 </div>
 
+<!-- Modal: Editar Profissional -->
+<div class="modal fade" id="modalEditarUsuario" tabindex="-1" aria-labelledby="modalEditarUsuarioLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <form method="POST">
+        <input type="hidden" name="acao" value="editar">
+        <input type="hidden" name="uid" value="">
+        <div class="modal-header bg-warning text-dark">
+          <h5 class="modal-title" id="modalEditarUsuarioLabel">&#9998; Editar Profissional</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <h6 class="text-muted fw-semibold mb-3">Dados Pessoais</h6>
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label">Nome Completo <span class="text-danger">*</span></label>
+              <input type="text" name="nome" class="form-control" required>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">CPF</label>
+              <input type="text" name="cpf" class="form-control" placeholder="000.000.000-00" maxlength="14">
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">Data de Nascimento</label>
+              <input type="date" name="data_nascimento" class="form-control">
+            </div>
+          </div>
+
+          <h6 class="text-muted fw-semibold mt-4 mb-3">Acesso ao Sistema</h6>
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label">E-mail <span class="text-danger">*</span></label>
+              <input type="email" name="email" class="form-control" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Nova Senha <small class="text-muted">(deixe em branco para manter)</small></label>
+              <input type="password" name="senha" class="form-control" autocomplete="new-password">
+            </div>
+          </div>
+
+          <h6 class="text-muted fw-semibold mt-4 mb-3">Dados Profissionais</h6>
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label">Ocupação <span class="text-danger">*</span></label>
+              <select name="ocupacao" class="form-select" required>
+                <option value="">— Selecione —</option>
+                <?php foreach ($ocupacoes as $oc): ?>
+                  <option value="<?= htmlspecialchars($oc) ?>"><?= htmlspecialchars($oc) ?></option>
+                <?php endforeach; ?>
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Registro de Classe <small class="text-muted">(ex: CRM 12345)</small></label>
+              <input type="text" name="registro_classe" class="form-control" placeholder="Ex: CRM 12345, COREN 54321">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Perfil <span class="text-danger">*</span></label>
+              <select name="perfil_novo" class="form-select" required>
+                <?php if ($isAdmin): ?>
+                  <option value="admin">Administrador</option>
+                  <option value="administrativo">Administrativo</option>
+                <?php endif; ?>
+                <option value="coordenador">Coordenador</option>
+                <option value="profissional">Profissional</option>
+              </select>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Lotação</label>
+              <?php if ($isAdmin): ?>
+                <select name="lotacao_id" class="form-select">
+                  <option value="">— Selecione —</option>
+                  <?php foreach ($estabelecimentos as $est): ?>
+                    <option value="<?= (int)$est['id'] ?>"><?= htmlspecialchars($est['nome']) ?></option>
+                  <?php endforeach; ?>
+                </select>
+              <?php else: ?>
+                <input type="hidden" name="lotacao_id" value="<?= $lotacaoId ?>">
+                <input type="text" class="form-control" value="<?= htmlspecialchars($estabMap[$lotacaoId] ?? '—') ?>" disabled>
+              <?php endif; ?>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Carga Horária</label>
+              <input type="text" name="carga_horaria" class="form-control" placeholder="Ex: 40h/sem">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Regime de Contratação</label>
+              <select name="regime_contratacao" class="form-select">
+                <option value="">— Selecione —</option>
+                <option value="efetivo">Efetivo</option>
+                <option value="temporario">Temporário</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-warning">Salvar Alterações</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+// Pre-fill the edit modal when any "Editar" button is clicked
+document.querySelectorAll('.btn-editar-usuario').forEach(function(btn) {
+  btn.addEventListener('click', function() {
+    var d = this.dataset;
+    var modal = document.getElementById('modalEditarUsuario');
+    modal.querySelector('[name="uid"]').value           = d.id;
+    modal.querySelector('[name="nome"]').value          = d.nome;
+    modal.querySelector('[name="cpf"]').value           = d.cpf;
+    modal.querySelector('[name="data_nascimento"]').value = d.nascimento;
+    modal.querySelector('[name="email"]').value         = d.email;
+    modal.querySelector('[name="senha"]').value         = '';  // always blank for security
+
+    // perfil select
+    var selPerfil = modal.querySelector('[name="perfil_novo"]');
+    Array.from(selPerfil.options).forEach(function(o){ o.selected = (o.value === d.perfil); });
+
+    // ocupação select
+    var selOcup = modal.querySelector('[name="ocupacao"]');
+    Array.from(selOcup.options).forEach(function(o){ o.selected = (o.value === d.ocupacao); });
+
+    modal.querySelector('[name="registro_classe"]').value = d.registro;
+    modal.querySelector('[name="carga_horaria"]').value   = d.carga;
+
+    // lotação select (or hidden input)
+    var selLot = modal.querySelector('[name="lotacao_id"]');
+    if (selLot && selLot.tagName === 'SELECT') {
+      Array.from(selLot.options).forEach(function(o){ o.selected = (o.value == d.lotacao); });
+    }
+
+    // regime select
+    var selReg = modal.querySelector('[name="regime_contratacao"]');
+    Array.from(selReg.options).forEach(function(o){ o.selected = (o.value === d.regime); });
+
+    var bsModal = bootstrap.Modal.getOrCreateInstance(modal);
+    bsModal.show();
+  });
+});
+</script>
 </body>
 </html>
