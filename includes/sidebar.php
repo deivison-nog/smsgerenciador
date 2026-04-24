@@ -1,25 +1,31 @@
 <?php
 // $basePath must be set by the including file (e.g. '..' for pages one level below root)
-// $activePage must be set to one of: 'cronograma', 'frequencia', 'chamado'
+// $activePage must be set to one of: 'dashboard', 'cronograma', 'frequencia', 'chamado'
 if (!isset($basePath))   { $basePath   = '..'; }
 if (!isset($activePage)) { $activePage = ''; }
 ?>
 <nav class="d-flex flex-column flex-shrink-0 bg-light border-end p-2" style="width:200px; min-height:calc(100vh - 56px);">
   <ul class="nav nav-pills flex-column mb-auto mt-2">
     <li class="nav-item">
-      <a class="nav-link <?= (isset($activePage) && $activePage === 'cronograma') ? 'active' : 'text-dark' ?>"
+      <a class="nav-link <?= ($activePage === 'dashboard') ? 'active' : 'text-dark' ?>"
+         href="<?= $basePath ?>/dashboard/index.php">
+        &#128202; Dashboard
+      </a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link <?= ($activePage === 'cronograma') ? 'active' : 'text-dark' ?>"
          href="<?= $basePath ?>/calendario/crono.php">
         &#128197; Cronograma
       </a>
     </li>
     <li class="nav-item">
-      <a class="nav-link <?= (isset($activePage) && $activePage === 'frequencia') ? 'active' : 'text-dark' ?>"
+      <a class="nav-link <?= ($activePage === 'frequencia') ? 'active' : 'text-dark' ?>"
          href="<?= $basePath ?>/frequencia/index.php">
         &#128203; Frequência
       </a>
     </li>
     <li class="nav-item">
-      <a class="nav-link <?= (isset($activePage) && $activePage === 'chamado') ? 'active' : 'text-dark' ?>"
+      <a class="nav-link <?= ($activePage === 'chamado') ? 'active' : 'text-dark' ?>"
          href="<?= $basePath ?>/chamado/index.php">
         &#128295; Chamado
       </a>

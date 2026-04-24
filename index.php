@@ -19,10 +19,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if ($usuario['tipo'] === 'admin') {
             header("Location: admin/painel.php");
-        } elseif ($usuario['tipo'] === 'estabelecimento') {
-            header("Location: calendario/crono.php");
         } else {
-            header("Location: calendario/crono.php");
+            header("Location: dashboard/index.php");
         }
         exit;
     } else {
