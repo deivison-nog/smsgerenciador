@@ -30,5 +30,13 @@ if (!isset($activePage)) { $activePage = ''; }
         &#128295; Chamado
       </a>
     </li>
+    <?php if (isset($_SESSION['usuario_tipo']) && $_SESSION['usuario_tipo'] === 'admin'): ?>
+    <li class="nav-item">
+      <a class="nav-link <?= ($activePage === 'admin') ? 'active' : 'text-dark' ?>"
+         href="<?= $basePath ?>/admin/painel.php">
+        &#9881; Painel Admin
+      </a>
+    </li>
+    <?php endif; ?>
   </ul>
 </nav>
