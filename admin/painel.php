@@ -24,6 +24,7 @@ $ocupacoes = [
     'Serviços Gerais','Tec de Laboratório','Tec em Enfermagem','Tec em Radiologia',
     'Terapeuta Ocupacional','TI','Vigia',
 ];
+sort($ocupacoes);
 $statusBadge = ['Aberto' => 'danger', 'Em andamento' => 'warning', 'Concluído' => 'success'];
 $perfilBadge = ['admin' => 'danger', 'administrativo' => 'warning', 'coordenador' => 'info', 'profissional' => 'primary'];
 $perfilLabel = ['admin' => 'Administrador', 'administrativo' => 'Administrativo', 'coordenador' => 'Coordenador', 'profissional' => 'Profissional'];
