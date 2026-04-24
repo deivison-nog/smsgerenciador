@@ -6,6 +6,8 @@
 -- Tempo de geração: 24/04/2026 às 03:02
 -- Versão do servidor: 10.4.32-MariaDB
 -- Versão do PHP: 8.0.30
+--
+-- Última atualização: adicionada coluna subtipo na tabela chamados (accordion de subtipos)
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -30,7 +32,8 @@ SET time_zone = "+00:00";
 CREATE TABLE `chamados` (
   `id` int(11) NOT NULL,
   `usuario_id` int(11) NOT NULL,
-  `tipo` varchar(50) NOT NULL,
+  `tipo` varchar(100) NOT NULL,
+  `subtipo` varchar(150) NOT NULL DEFAULT '',
   `titulo` varchar(150) NOT NULL,
   `descricao` text DEFAULT NULL,
   `status` varchar(30) NOT NULL DEFAULT 'Aberto',
