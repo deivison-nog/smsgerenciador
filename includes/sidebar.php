@@ -1,6 +1,8 @@
 <?php
 // $basePath must be set by the including file (e.g. '..' for pages one level below root)
 // $activePage must be set to one of: 'cronograma', 'frequencia', 'chamado'
+if (!isset($basePath))   { $basePath   = '..'; }
+if (!isset($activePage)) { $activePage = ''; }
 ?>
 <nav class="d-flex flex-column flex-shrink-0 bg-light border-end p-2" style="width:200px; min-height:calc(100vh - 56px);">
   <ul class="nav nav-pills flex-column mb-auto mt-2">
