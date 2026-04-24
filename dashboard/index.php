@@ -6,6 +6,11 @@ if (!isset($_SESSION['usuario_id'])) {
     header('Location: ../index.php');
     exit;
 }
+// Profissional só tem acesso ao cronograma
+if (($_SESSION['usuario_perfil'] ?? '') === 'profissional') {
+    header('Location: ../calendario/crono.php');
+    exit;
+}
 
 $usuarioTipo = $_SESSION['usuario_tipo'];
 $usuarioId   = $_SESSION['usuario_id'];

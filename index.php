@@ -13,16 +13,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
 
     if ($usuario && md5($senha) === $usuario['senha']) {
-        $_SESSION['usuario_id'] = $usuario['id'];
-        $_SESSION['usuario_nome'] = $usuario['nome'];
-        $_SESSION['usuario_tipo'] = $usuario['tipo'];
-
-        if ($usuario['tipo'] === 'admin') {
-            header("Location: admin/painel.php");
+        $situacao = $usuario['situacao'] ?? 'ativo';
+        if ($situacao === 'inativo') {
+            $erro = "Usuário inativo. Entre em contato com o administrador.";
         } else {
-            header("Location: dashboard/index.php");
+            $_SESSION['usuario_id']         = $usuario['id'];
+            $_SESSION['usuario_nome']       = $usuario['nome'];
+            $_SESSION['usuario_tipo']       = $usuario['tipo'];
+            $_SESSION['usuario_perfil']     = $usuario['perfil'] ?? ($usuario['tipo'] === 'admin' ? 'admin' : 'profissional');
+            $_SESSION['usuario_lotacao_id'] = $usuario['lotacao_id'] ?? null;
+
+            $perfil = $_SESSION['usuario_perfil'];
+            if ($usuario['tipo'] === 'admin' || $perfil === 'administrativo') {
+                header("Location: admin/painel.php");
+            } elseif ($perfil === 'coordenador') {
+                header("Location: dashboard/index.php");
+            } elseif ($usuario['tipo'] === 'estabelecimento') {
+                header("Location: dashboard/index.php");
+            } else {
+                // profissional
+                header("Location: calendario/crono.php");
+            }
+            exit;
         }
-        exit;
     } else {
         $erro = "E-mail ou senha inválidos.";
     }
