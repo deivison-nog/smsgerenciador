@@ -5,11 +5,11 @@ require_once 'includes/db.php';
 $erro = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $email = $_POST['email'] ?? '';
+    $cpf_digits = preg_replace('/\D/', '', $_POST['cpf'] ?? '');
     $senha = $_POST['senha'] ?? '';
 
-    $stmt = $conn->prepare("SELECT * FROM usuarios WHERE email = ?");
-    $stmt->execute([$email]);
+    $stmt = $conn->prepare("SELECT * FROM usuarios WHERE REPLACE(REPLACE(cpf, '.', ''), '-', '') = ?");
+    $stmt->execute([$cpf_digits]);
     $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
 
     if ($usuario && md5($senha) === $usuario['senha']) {
@@ -37,7 +37,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             exit;
         }
     } else {
-        $erro = "E-mail ou senha inválidos.";
+        $erro = "CPF ou senha inválidos.";
     }
 }
 ?>
@@ -57,7 +57,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       border-radius: 8px;
       box-shadow: 0 0 10px #ccc;
     }
-    input[type="email"], input[type="password"] {
+    input[type="text"], input[type="password"] {
       width: -webkit-fill-available; padding: 10px; margin: 10px 0;
     }
     input[type="submit"] {
@@ -73,12 +73,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       <p class="erro"><?= htmlspecialchars($erro) ?></p>
     <?php endif; ?>
     <form method="POST">
-      <label>E-mail:</label>
-      <input type="email" name="email" required>
+      <label>CPF:</label>
+      <input type="text" name="cpf" id="loginCpf" placeholder="000.000.000-00" maxlength="14" required autocomplete="username">
       <label>Senha:</label>
       <input type="password" name="senha" required>
       <input type="submit" value="Entrar">
     </form>
   </div>
+<script>
+document.getElementById('loginCpf').addEventListener('input', function() {
+  this.value = mascaraCPF(this.value);
+});
+function mascaraCPF(v) {
+  v = v.replace(/\D/g, '').substring(0, 11);
+  v = v.replace(/^(\d{3})(\d)/, '$1.$2');
+  v = v.replace(/^(\d{3})\.(\d{3})(\d)/, '$1.$2.$3');
+  v = v.replace(/(\d{3})\.(\d{3})\.(\d{3})(\d)/, '$1.$2.$3-$4');
+  return v;
+}
+</script>
 </body>
 </html>

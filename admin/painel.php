@@ -18,10 +18,11 @@ $erro     = '';
 
 // ── listas auxiliares ──────────────────────────────────────────────────────
 $ocupacoes = [
-    'Médico','Enfermeiro','Agente Comunitário de Saúde','Agente de Combate às Endemias',
-    'Motorista','Vigia','Aux Administrativo','Serviços Gerais','Assistente Social',
-    'Tec em Enfermagem','Tec em Radiologia','Tec de Laboratório','Biomédico','Nutricionista',
-    'Psicólogo','Fisioterapeuta','Terapeuta Ocupacional','Odontólogo','Aux de Saúde Bucal','Naturólogo',
+    'Agente Comunitário de Saúde','Agente de Combate às Endemias','Assistente Social',
+    'Aux Administrativo','Aux de Saúde Bucal','Biomédico','Enfermeiro','Fisioterapeuta',
+    'Médico','Motorista','Naturólogo','Nutricionista','Odontólogo','Psicólogo',
+    'Serviços Gerais','Tec de Laboratório','Tec em Enfermagem','Tec em Radiologia',
+    'Terapeuta Ocupacional','TI','Vigia',
 ];
 $statusBadge = ['Aberto' => 'danger', 'Em andamento' => 'warning', 'Concluído' => 'success'];
 $perfilBadge = ['admin' => 'danger', 'administrativo' => 'warning', 'coordenador' => 'info', 'profissional' => 'primary'];
@@ -30,7 +31,7 @@ $perfilLabel = ['admin' => 'Administrador', 'administrativo' => 'Administrativo'
 // ── POST: cadastrar usuário ────────────────────────────────────────────────
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['acao'] ?? '') === 'cadastrar') {
     $nome               = trim($_POST['nome']               ?? '');
-    $cpf                = trim($_POST['cpf']                ?? '');
+    $cpf                = preg_replace('/\D/', '', trim($_POST['cpf'] ?? ''));
     $data_nascimento    = trim($_POST['data_nascimento']    ?? '') ?: null;
     $email              = trim($_POST['email']              ?? '');
     $senha              = trim($_POST['senha']              ?? '');
@@ -45,8 +46,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['acao'] ?? '') === 'cadastr
     // Administrativo não pode criar admin nem outros administrativos; lotacao é a sua própria
     if (!$isAdmin && in_array($perfil_novo, ['admin', 'administrativo'])) {
         $erro = 'Sem permissão para criar usuários com este perfil.';
-    } elseif ($nome === '' || $email === '' || $senha === '') {
-        $erro = 'Preencha todos os campos obrigatórios (Nome, E-mail, Senha).';
+    } elseif ($nome === '' || $cpf === '' || $senha === '') {
+        $erro = 'Preencha todos os campos obrigatórios (Nome, CPF, Senha).';
     } else {
         $tipo = ($perfil_novo === 'admin') ? 'admin' : 'funcionario';
         if (!$isAdmin) { $lotacao_nova = $lotacaoId; }
@@ -104,7 +105,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['acao'] ?? '') === 'reativa
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['acao'] ?? '') === 'editar') {
     $uid             = (int) ($_POST['uid']              ?? 0);
     $nome            = trim($_POST['nome']               ?? '');
-    $cpf             = trim($_POST['cpf']                ?? '');
+    $cpf             = preg_replace('/\D/', '', trim($_POST['cpf'] ?? ''));
     $data_nascimento = trim($_POST['data_nascimento']    ?? '') ?: null;
     $email           = trim($_POST['email']              ?? '');
     $senha           = trim($_POST['senha']              ?? '');
@@ -117,8 +118,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['acao'] ?? '') === 'editar'
 
     if (!$isAdmin && in_array($perfil_edit, ['admin', 'administrativo'])) {
         $erro = 'Sem permissão para definir este perfil.';
-    } elseif ($uid <= 0 || $nome === '' || $email === '') {
-        $erro = 'Preencha todos os campos obrigatórios (Nome, E-mail).';
+    } elseif ($uid <= 0 || $nome === '') {
+        $erro = 'Preencha todos os campos obrigatórios (Nome).';
     } else {
         if (!$isAdmin) { $lotacao_edit = $lotacaoId; }
         $tipo_edit = ($perfil_edit === 'admin') ? 'admin' : 'funcionario';
@@ -511,8 +512,8 @@ $chamados = $conn->query("
               <input type="text" name="nome" class="form-control" required>
             </div>
             <div class="col-md-3">
-              <label class="form-label">CPF</label>
-              <input type="text" name="cpf" class="form-control" placeholder="000.000.000-00" maxlength="14">
+              <label class="form-label">CPF <span class="text-danger">*</span></label>
+              <input type="text" name="cpf" id="cpfNovo" class="form-control cpf-mask" placeholder="000.000.000-00" maxlength="14" required>
             </div>
             <div class="col-md-3">
               <label class="form-label">Data de Nascimento</label>
@@ -523,8 +524,8 @@ $chamados = $conn->query("
           <h6 class="text-muted fw-semibold mt-4 mb-3">Acesso ao Sistema</h6>
           <div class="row g-3">
             <div class="col-md-6">
-              <label class="form-label">E-mail <span class="text-danger">*</span></label>
-              <input type="email" name="email" class="form-control" required>
+              <label class="form-label">E-mail</label>
+              <input type="email" name="email" class="form-control">
             </div>
             <div class="col-md-6">
               <label class="form-label">Senha <span class="text-danger">*</span></label>
@@ -573,8 +574,8 @@ $chamados = $conn->query("
               <?php endif; ?>
             </div>
             <div class="col-md-4">
-              <label class="form-label">Carga Horária</label>
-              <input type="text" name="carga_horaria" class="form-control" placeholder="Ex: 40h/sem">
+              <label class="form-label">Carga Horária <small class="text-muted">(h/sem)</small></label>
+              <input type="number" name="carga_horaria" class="form-control" min="1" max="60" placeholder="Ex: 40">
             </div>
             <div class="col-md-6">
               <label class="form-label">Regime de Contratação</label>
@@ -615,7 +616,7 @@ $chamados = $conn->query("
             </div>
             <div class="col-md-3">
               <label class="form-label">CPF</label>
-              <input type="text" name="cpf" class="form-control" placeholder="000.000.000-00" maxlength="14">
+              <input type="text" name="cpf" id="cpfEdit" class="form-control cpf-mask" placeholder="000.000.000-00" maxlength="14">
             </div>
             <div class="col-md-3">
               <label class="form-label">Data de Nascimento</label>
@@ -626,8 +627,8 @@ $chamados = $conn->query("
           <h6 class="text-muted fw-semibold mt-4 mb-3">Acesso ao Sistema</h6>
           <div class="row g-3">
             <div class="col-md-6">
-              <label class="form-label">E-mail <span class="text-danger">*</span></label>
-              <input type="email" name="email" class="form-control" required>
+              <label class="form-label">E-mail</label>
+              <input type="email" name="email" class="form-control">
             </div>
             <div class="col-md-6">
               <label class="form-label">Nova Senha <small class="text-muted">(deixe em branco para manter)</small></label>
@@ -676,8 +677,8 @@ $chamados = $conn->query("
               <?php endif; ?>
             </div>
             <div class="col-md-4">
-              <label class="form-label">Carga Horária</label>
-              <input type="text" name="carga_horaria" class="form-control" placeholder="Ex: 40h/sem">
+              <label class="form-label">Carga Horária <small class="text-muted">(h/sem)</small></label>
+              <input type="number" name="carga_horaria" class="form-control" min="1" max="60" placeholder="Ex: 40">
             </div>
             <div class="col-md-6">
               <label class="form-label">Regime de Contratação</label>
@@ -700,36 +701,45 @@ $chamados = $conn->query("
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-// Pre-fill the edit modal when any "Editar" button is clicked
+// ── CPF mask ─────────────────────────────────────────────────────────────────
+function mascaraCPF(v) {
+  v = v.replace(/\D/g, '').substring(0, 11);
+  v = v.replace(/^(\d{3})(\d)/, '$1.$2');
+  v = v.replace(/^(\d{3})\.(\d{3})(\d)/, '$1.$2.$3');
+  v = v.replace(/(\d{3})\.(\d{3})\.(\d{3})(\d)/, '$1.$2.$3-$4');
+  return v;
+}
+document.querySelectorAll('.cpf-mask').forEach(function(el) {
+  el.addEventListener('input', function() { this.value = mascaraCPF(this.value); });
+});
+
+// ── Pre-fill the edit modal ───────────────────────────────────────────────────
 document.querySelectorAll('.btn-editar-usuario').forEach(function(btn) {
   btn.addEventListener('click', function() {
     var d = this.dataset;
     var modal = document.getElementById('modalEditarUsuario');
-    modal.querySelector('[name="uid"]').value           = d.id;
-    modal.querySelector('[name="nome"]').value          = d.nome;
-    modal.querySelector('[name="cpf"]').value           = d.cpf;
+    modal.querySelector('[name="uid"]').value             = d.id;
+    modal.querySelector('[name="nome"]').value            = d.nome;
+    // format stored CPF digits back to masked display
+    modal.querySelector('[name="cpf"]').value             = mascaraCPF(d.cpf);
     modal.querySelector('[name="data_nascimento"]').value = d.nascimento;
-    modal.querySelector('[name="email"]').value         = d.email;
-    modal.querySelector('[name="senha"]').value         = '';  // always blank for security
+    modal.querySelector('[name="email"]').value           = d.email;
+    modal.querySelector('[name="senha"]').value           = '';
 
-    // perfil select
     var selPerfil = modal.querySelector('[name="perfil_novo"]');
     Array.from(selPerfil.options).forEach(function(o){ o.selected = (o.value === d.perfil); });
 
-    // ocupação select
     var selOcup = modal.querySelector('[name="ocupacao"]');
     Array.from(selOcup.options).forEach(function(o){ o.selected = (o.value === d.ocupacao); });
 
     modal.querySelector('[name="registro_classe"]').value = d.registro;
     modal.querySelector('[name="carga_horaria"]').value   = d.carga;
 
-    // lotação select (or hidden input)
     var selLot = modal.querySelector('[name="lotacao_id"]');
     if (selLot && selLot.tagName === 'SELECT') {
       Array.from(selLot.options).forEach(function(o){ o.selected = (o.value == d.lotacao); });
     }
 
-    // regime select
     var selReg = modal.querySelector('[name="regime_contratacao"]');
     Array.from(selReg.options).forEach(function(o){ o.selected = (o.value === d.regime); });
 
