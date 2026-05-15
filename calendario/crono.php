@@ -53,7 +53,7 @@ if ($isFuncionario) {
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <style>
-    body { font-family: Arial, sans-serif; padding: 20px; background: #f8f9fa; }
+    body { font-family: Arial, sans-serif; background: #f8f9fa; margin: 0; }
     #calendar { max-width: 100%; margin: 40px auto; background: #fff; border-radius: 8px; box-shadow: 0 2px 8px #ccc; padding: 10px; }
     .fc-event { font-size: 1rem; white-space: pre-line !important; }
     .fc-day-header, .fc-day-number { color: #212529; }
@@ -92,8 +92,7 @@ if ($isFuncionario) {
 </head>
 <body>
 
-<div id="cabecalho-calendario">
-<nav class="navbar navbar-expand-lg navbar-dark bg-primary rounded mb-4">
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary mb-0">
   <div class="container-fluid">
     <span class="navbar-brand">Smsgerenciador - <?= htmlspecialchars($_SESSION['usuario_nome']) ?></span>
     <div class="d-flex">
@@ -102,7 +101,13 @@ if ($isFuncionario) {
   </div>
 </nav>
 
-<div class="container">
+<div class="d-flex">
+  <?php $basePath = '..'; $activePage = 'cronograma'; require_once '../includes/sidebar.php'; ?>
+
+  <div class="flex-grow-1 p-3">
+<div id="cabecalho-calendario">
+
+<div class="container-fluid">
 
   <?php if ($isAdmin): ?>
     <div class="mb-3 row">
@@ -168,7 +173,10 @@ if ($isFuncionario) {
   </form>
 </div>
 
-<button id="pdf-button" class="btn btn-danger">Salvar em PDF</button>
+<button id="pdf-button" class="btn btn-danger ms-3 mb-3">Salvar em PDF</button>
+
+  </div><!-- /.flex-grow-1 -->
+</div><!-- /.d-flex -->
 
 <script>
 const usuarioTipo = <?= json_encode($usuarioTipo) ?>;
